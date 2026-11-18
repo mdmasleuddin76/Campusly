@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/*
+  Campusly theme - only 3 colours (60 / 30 / 10 rule)
+  Butter Cream  #F4EAD5  60%  main    -> backgrounds, cards, surfaces
+  Forest Green  #1E3B2F  30%  second  -> text, headings, nav, dark sections
+  Hot Pink      #FF3EA5  10%  accent  -> buttons, highlights, badges, focus
+
+  Each colour has lighter/darker shades. The base colour is marked "base".
+  Use in classes like: bg-cream-200, text-forest-800, bg-hotpink-500
+*/
+@theme {
+  /* Butter Cream */
+  --color-cream-50: #fdfaf3;
+  --color-cream-100: #faf4e8;
+  --color-cream-200: #f4ead5; /* base */
+  --color-cream-300: #eadbbb;
+  --color-cream-400: #ddc89e;
+  --color-cream-500: #cdb27f;
+  --color-cream-600: #b39563;
+  --color-cream-700: #8f754c;
+  --color-cream-800: #6b5739;
+  --color-cream-900: #4a3c28;
+
+  /* Forest Green */
+  --color-forest-50: #eef4f1;
+  --color-forest-100: #d5e5dc;
+  --color-forest-200: #aecbbb;
+  --color-forest-300: #7fa894;
+  --color-forest-400: #548570;
+  --color-forest-500: #3a6a56;
+  --color-forest-600: #2b5443;
+  --color-forest-700: #234537;
+  --color-forest-800: #1e3b2f; /* base */
+  --color-forest-900: #152a21;
+  --color-forest-950: #0d1b15;
+
+  /* Hot Pink */
+  --color-hotpink-50: #fff0f7;
+  --color-hotpink-100: #ffdcec;
+  --color-hotpink-200: #ffb8da;
+  --color-hotpink-300: #ff8ac4;
+  --color-hotpink-400: #ff5fb2;
+  --color-hotpink-500: #ff3ea5; /* base */
+  --color-hotpink-600: #e92a8f;
+  --color-hotpink-700: #c41e76;
+  --color-hotpink-800: #9a1a5e;
+  --color-hotpink-900: #73164a;
+
+  /* Fonts: Fraunces (serif, for headings - like the reference) + Inter (body) */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Soft shadows tinted with forest green instead of plain black */
+  --shadow-soft: 0 2px 8px -2px rgb(30 59 47 / 0.08), 0 8px 24px -6px rgb(30 59 47 / 0.12);
+  --shadow-lift: 0 12px 32px -8px rgb(30 59 47 / 0.22);
+  --shadow-glow: 0 8px 24px -6px rgb(255 62 165 / 0.45);
+
+  /* Animations: animate-marquee, animate-spin-slow */
+  --animate-marquee: marquee 32s linear infinite;
+  --animate-spin-slow: spin 14s linear infinite;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+}
+
+/* Subtle dotted backgrounds: bg-dots (on cream) and bg-dots-light (on forest) */
+@utility bg-dots {
+  background-image: radial-gradient(rgb(30 59 47 / 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+@utility bg-dots-light {
+  background-image: radial-gradient(rgb(244 234 213 / 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-cream-200 text-forest-800 font-sans antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display text-forest-800;
+  }
+  ::selection {
+    @apply bg-hotpink-200 text-forest-900;
+  }
+  /* Accessible focus ring in the accent colour */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-hotpink-500;
+  }
+}

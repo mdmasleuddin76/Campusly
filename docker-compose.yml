@@ -1,0 +1,68 @@
+# Campusly: frontend (Nginx + React), backend (Node API) and MongoDB.
+# Values come from the .env file next to this file (copy .env.example to .env).
+#
+#   docker compose up -d --build
+#
+# Security:
+# - Only the frontend is published, and only on 127.0.0.1 (the server's Nginx forwards to it).
+# - The backend and MongoDB publish NO ports: nothing outside this server can reach them.
+# - MongoDB sits on an internal network that only the backend can join, and requires a password.
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: campusly-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
+    networks: [db] # no "ports:" on purpose
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  backend:
+    build: ./backend
+    container_name: campusly-backend
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo:27017/campusly?authSource=admin
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      CLIENT_URL: ${CLIENT_URL}
+      TPO_NAME: ${TPO_NAME:-TPO Admin}
+      TPO_EMAIL: ${TPO_EMAIL}
+      TPO_PASSWORD: ${TPO_PASSWORD}
+    networks: [web, db] # no "ports:" on purpose
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-}
+    container_name: campusly-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      # localhost only: the server's Nginx forwards campusly.maslecodes.fun here
+      - "127.0.0.1:${APP_PORT:-8085}:80"
+    networks: [web]
+
+networks:
+  web: {}
+  db:
+    internal: true # no route to or from the outside world
+
+volumes:
+  mongo-data:
