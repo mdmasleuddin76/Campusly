@@ -1,5 +1,7 @@
 # Stage 1: build the React app
-FROM node:22-alpine AS build
+# Debian-based Node for the build: Vite's bundler (Rollup) can crash on Alpine with
+# "Code is nested too deeply" because of Alpine's small thread stack. The final image is still tiny.
+FROM node:22-slim AS build
 WORKDIR /app
 
 COPY package*.json ./
