@@ -10,7 +10,8 @@
 
 services:
   mongo:
-    image: mongo:7
+    # mongo:7 needs a CPU with AVX. On servers without it, set MONGO_IMAGE=mongo:4.4 in .env
+    image: ${MONGO_IMAGE:-mongo:7}
     container_name: campusly-mongo
     restart: unless-stopped
     environment:
@@ -20,7 +21,8 @@ services:
       - mongo-data:/data/db
     networks: [db] # no "ports:" on purpose
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      # mongosh (Mongo 5+) or mongo (Mongo 4.4), whichever the image has
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand(\"ping\")' || mongo --quiet --eval 'db.adminCommand(\"ping\")'"]
       interval: 10s
       timeout: 5s
       retries: 10
