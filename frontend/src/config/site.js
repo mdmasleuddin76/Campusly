@@ -6,12 +6,12 @@ export const SITE = {
 };
 
 // Links shown in the header after login, per role.
-// (Pages for these are built in the next steps.)
 export const NAV_BY_ROLE = {
   STUDENT: [
+    { to: "/student", label: "Dashboard" },
     { to: "/student/jobs", label: "Jobs" },
     { to: "/student/applications", label: "My applications" },
-    { to: "/announcements", label: "Announcements" },
+    { to: "/student/announcements", label: "Announcements" },
   ],
   RECRUITER: [
     { to: "/recruiter/jobs", label: "My jobs" },
@@ -27,7 +27,7 @@ export const NAV_BY_ROLE = {
 
 // Where each role lands after login
 export const homeFor = (role) =>
-  ({ TPO: "/tpo/approvals", RECRUITER: "/recruiter/jobs", STUDENT: "/" })[role] || "/";
+  ({ TPO: "/tpo/approvals", RECRUITER: "/recruiter/jobs", STUDENT: "/student" })[role] || "/";
 
 export const ROLE_LABEL = { STUDENT: "Student", RECRUITER: "Recruiter", TPO: "TPO" };
 
