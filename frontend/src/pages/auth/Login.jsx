@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, CircleAlert, Lock, Mail } from "lucide-react";
+import { ArrowRight, CircleAlert, Info, Lock, Mail } from "lucide-react";
 import { toast } from "sonner";
 import AuthShell from "../../components/AuthShell";
 import Button from "../../components/ui/Button";
@@ -64,6 +64,12 @@ export default function Login() {
       subtitle="Students, recruiters and the TPO all sign in here. You'll see what your role can do."
     >
       <form onSubmit={onSubmit} noValidate className="space-y-5 rounded-3xl bg-cream-50/90 p-7 shadow-lift backdrop-blur sm:p-9">
+        {location.state?.notice && !serverError && (
+          <div className="flex items-start gap-2 rounded-xl border border-forest-200 bg-forest-50 px-4 py-3 text-sm text-forest-800">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" />
+            {location.state.notice}
+          </div>
+        )}
         <AnimatePresence>
           {serverError && (
             <motion.div

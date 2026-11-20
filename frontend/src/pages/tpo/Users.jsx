@@ -248,7 +248,8 @@ export default function Users() {
                         {u.role === "STUDENT" ? (
                           <>
                             <span className="font-semibold text-forest-800">{u.student?.rollNo}</span> · {u.student?.department} · CGPA{" "}
-                            <span className="font-semibold text-forest-800">{u.student?.cgpa}</span>
+                            <span className="font-semibold text-forest-800">{u.student?.cgpa}</span> · Backlogs{" "}
+                            <span className="font-semibold text-forest-800">{u.student?.backlogs ?? "–"}</span>
                           </>
                         ) : (
                           <>

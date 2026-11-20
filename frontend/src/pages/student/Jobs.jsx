@@ -16,6 +16,7 @@ export default function Jobs() {
   const [type, setType] = useState("ALL");
   const [query, setQuery] = useState("");
   const [hideApplied, setHideApplied] = useState(false);
+  const [onlyEligible, setOnlyEligible] = useState(false);
   const [sort, setSort] = useState("newest");
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export default function Jobs() {
       (j) =>
         (type === "ALL" || j.jobType === type) &&
         (!hideApplied || !j.hasApplied) &&
+        (!onlyEligible || j.eligible !== false) &&
         (!q || [j.role, j.companyName, j.location, j.eligibility].filter(Boolean).join(" ").toLowerCase().includes(q))
     );
     if (sort === "deadline") {
@@ -49,9 +51,10 @@ export default function Jobs() {
       list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
     return list;
-  }, [jobs, type, query, hideApplied, sort]);
+  }, [jobs, type, query, hideApplied, onlyEligible, sort]);
 
   const appliedCount = jobs.filter((j) => j.hasApplied).length;
+  const eligibleCount = jobs.filter((j) => j.eligible !== false).length;
 
   return (
     <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8">
@@ -62,10 +65,14 @@ export default function Jobs() {
         subtitle="Every drive here is approved by the TPO and open for applications."
       >
         {!loading && (
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <div className="rounded-2xl bg-forest-800 px-5 py-3 text-cream-100">
               <p className="font-display text-3xl font-bold">{jobs.length}</p>
               <p className="text-xs text-cream-300/70">open now</p>
+            </div>
+            <div className="rounded-2xl bg-cream-50 px-5 py-3 ring-1 ring-cream-300">
+              <p className="font-display text-3xl font-bold">{eligibleCount}</p>
+              <p className="text-xs text-forest-500">you're eligible for</p>
             </div>
             <div className="rounded-2xl bg-hotpink-500 px-5 py-3 text-white shadow-glow">
               <p className="font-display text-3xl font-bold">{appliedCount}</p>
@@ -90,19 +97,12 @@ export default function Jobs() {
           <SearchInput value={query} onChange={setQuery} placeholder="Search role, company, location..." className="lg:w-96" />
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => setHideApplied((h) => !h)}
-            className="flex cursor-pointer items-center gap-2.5 rounded-full bg-cream-200 py-1.5 pl-1.5 pr-4 text-xs font-semibold text-forest-700 transition hover:bg-cream-300"
-          >
-            <span className={`relative h-5 w-9 rounded-full transition-colors ${hideApplied ? "bg-hotpink-500" : "bg-cream-400"}`}>
-              <motion.span
-                layout
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow ${hideApplied ? "right-0.5" : "left-0.5"}`}
-              />
-            </span>
+          <Toggle on={onlyEligible} onClick={() => setOnlyEligible((v) => !v)}>
+            Only drives I'm eligible for
+          </Toggle>
+          <Toggle on={hideApplied} onClick={() => setHideApplied((h) => !h)}>
             Hide drives I've applied to
-          </button>
+          </Toggle>
           <label className="relative ml-auto">
             <ArrowDownUp className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-forest-400" />
             <select
@@ -135,5 +135,23 @@ export default function Jobs() {
         )}
       </div>
     </section>
+  );
+}
+
+function Toggle({ on, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex cursor-pointer items-center gap-2.5 rounded-full bg-cream-200 py-1.5 pl-1.5 pr-4 text-xs font-semibold text-forest-700 transition hover:bg-cream-300"
+    >
+      <span className={`relative h-5 w-9 rounded-full transition-colors ${on ? "bg-hotpink-500" : "bg-cream-400"}`}>
+        <motion.span
+          layout
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow ${on ? "right-0.5" : "left-0.5"}`}
+        />
+      </span>
+      {children}
+    </button>
   );
 }

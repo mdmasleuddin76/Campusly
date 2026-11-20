@@ -4,13 +4,16 @@ import { AnimatePresence, motion } from "motion/react";
 import {
   ArrowLeft,
   ArrowRight,
+  Ban,
   CircleCheck,
+  CircleX,
   ExternalLink,
   FileText,
   Hourglass,
   Link2,
   Lock,
   MessageSquareText,
+  Pencil,
   SearchX,
   Send,
   ShieldCheck,
@@ -26,6 +29,8 @@ import StatusBadge from "../../components/ui/StatusBadge";
 import { Input } from "../../components/ui/Field";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { daysLeft, deadlineText, formatDate, initials, timeAgo } from "../../utils/format";
+import { backlogText } from "../../components/JobMeta";
+import { useAuth } from "../../context/AuthContext";
 
 const RESUME_KEY = "campusly:lastResumeLink";
 
@@ -54,8 +59,11 @@ const isUrl = (v) => {
   }
 };
 
+const isSet = (v) => v !== undefined && v !== null;
+
 export default function JobDetails() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -90,6 +98,11 @@ export default function JobDetails() {
       toast.success("Application sent!", { description: `Good luck with ${job.companyName}.` });
     } catch (err) {
       toast.error(errorMessage(err));
+      // Server says not eligible (e.g. profile changed in another tab): show the reasons
+      const reasons = err.response?.data?.reasons;
+      if (err.response?.status === 403 && reasons) {
+        setJob({ ...job, eligible: false, ineligibleReasons: reasons, canApply: false });
+      }
     } finally {
       setApplying(false);
     }
@@ -157,15 +170,37 @@ export default function JobDetails() {
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.5fr_1fr]">
         {/* About */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-6">
-          {job.eligibility && (
-            <div className="flex items-start gap-4 rounded-3xl border border-cream-300 bg-cream-50 p-6">
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-forest-800 text-cream-100">
-                <ShieldCheck className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-forest-400">Who can apply</p>
-                <p className="mt-1 text-lg font-semibold text-forest-800">{job.eligibility}</p>
+          {(job.eligibility || isSet(job.minCgpa) || isSet(job.maxBacklogs)) && (
+            <div className="rounded-3xl border border-cream-300 bg-cream-50 p-6">
+              <div className="flex items-start gap-4">
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-forest-800 text-cream-100">
+                  <ShieldCheck className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-forest-400">Who can apply</p>
+                  {job.eligibility && <p className="mt-1 text-lg font-semibold text-forest-800">{job.eligibility}</p>}
+                  {!job.eligibility && <p className="mt-1 text-lg font-semibold text-forest-800">Students who meet these limits</p>}
+                </div>
               </div>
+
+              {(isSet(job.minCgpa) || isSet(job.maxBacklogs)) && (
+                <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                  {isSet(job.minCgpa) && (
+                    <Criterion
+                      label={`CGPA ${job.minCgpa} or more`}
+                      yours={isSet(user?.student?.cgpa) ? `Yours: ${user.student.cgpa}` : "Yours: not added"}
+                      ok={isSet(user?.student?.cgpa) && user.student.cgpa >= job.minCgpa}
+                    />
+                  )}
+                  {isSet(job.maxBacklogs) && (
+                    <Criterion
+                      label={backlogText(job.maxBacklogs)}
+                      yours={isSet(user?.student?.backlogs) ? `Yours: ${user.student.backlogs}` : "Yours: not added"}
+                      ok={isSet(user?.student?.backlogs) && user.student.backlogs <= job.maxBacklogs}
+                    />
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -287,6 +322,35 @@ export default function JobDetails() {
                   ))}
                 </ul>
               </motion.form>
+            ) : job.acceptingApplications && job.eligible === false ? (
+              <motion.div
+                key="not-eligible"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-[2rem] bg-cream-50 p-7 shadow-lift"
+              >
+                <span className="grid h-14 w-14 place-items-center rounded-2xl bg-hotpink-100 text-hotpink-700">
+                  <Ban className="h-6 w-6" />
+                </span>
+                <h2 className="mt-4 text-2xl font-bold">
+                  You're not <span className="italic text-hotpink-500">eligible</span>
+                </h2>
+                <p className="mt-1 text-sm text-forest-500">This drive has limits your profile doesn't meet:</p>
+                <ul className="mt-4 space-y-2">
+                  {(job.ineligibleReasons || []).map((r) => (
+                    <li key={r} className="flex items-start gap-2 rounded-xl bg-hotpink-50 px-3 py-2.5 text-sm font-medium text-hotpink-800">
+                      <CircleX className="mt-0.5 h-4 w-4 shrink-0" /> {r}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to="/student/profile"
+                  className="group mt-6 flex items-center justify-center gap-2 rounded-full border-2 border-forest-800 py-3 text-sm font-semibold text-forest-800 transition hover:bg-forest-800 hover:text-cream-100"
+                >
+                  <Pencil className="h-4 w-4" /> Details wrong? Update your profile
+                </Link>
+                <p className="mt-2 text-center text-xs text-forest-400">Profile changes need TPO approval again.</p>
+              </motion.div>
             ) : (
               <motion.div key="closed" className="rounded-[2rem] bg-cream-50 p-7 text-center shadow-lift">
                 <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-cream-200 text-forest-600">
@@ -300,5 +364,17 @@ export default function JobDetails() {
         </motion.aside>
       </div>
     </section>
+  );
+}
+
+function Criterion({ label, yours, ok }) {
+  return (
+    <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${ok ? "bg-forest-50" : "bg-hotpink-50"}`}>
+      {ok ? <CircleCheck className="h-5 w-5 shrink-0 text-forest-600" /> : <CircleX className="h-5 w-5 shrink-0 text-hotpink-600" />}
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-forest-800">{label}</p>
+        <p className={`text-xs ${ok ? "text-forest-500" : "text-hotpink-700"}`}>{yours}</p>
+      </div>
+    </div>
   );
 }

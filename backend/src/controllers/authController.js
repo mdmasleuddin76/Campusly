@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import generateToken, { cookieOptions } from "../utils/generateToken.js";
+import { parseStudentFields } from "../utils/validation.js";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -18,29 +19,20 @@ const validateCommon = ({ name, email, password }) => {
 // POST /api/auth/signup/student
 export const studentSignup = async (req, res, next) => {
   try {
-    const { name, email, password, phone, rollNo, department, cgpa, graduationYear } = req.body;
+    const { name, email, password, phone } = req.body;
 
     const error = validateCommon(req.body);
     if (error) return res.status(400).json({ success: false, message: error });
 
-    if (!rollNo || !department || cgpa === undefined || !graduationYear) {
-      return res.status(400).json({
-        success: false,
-        message: "Roll number, department, CGPA and graduation year are required",
-      });
-    }
-    if (cgpa === "" || isNaN(cgpa) || Number(cgpa) < 0 || Number(cgpa) > 10) {
-      return res.status(400).json({ success: false, message: "CGPA must be between 0 and 10" });
-    }
-    if (!Number.isInteger(Number(graduationYear))) {
-      return res.status(400).json({ success: false, message: "Graduation year must be a number, e.g. 2026" });
-    }
+    // rollNo, department, cgpa, graduationYear, backlogs (same rules as profile updates)
+    const academic = parseStudentFields(req.body);
+    if (academic.error) return res.status(400).json({ success: false, message: academic.error });
 
     const exists = await User.findOne({ email: email.toLowerCase() });
     if (exists) return res.status(409).json({ success: false, message: "Email already registered" });
 
     // Roll number must be unique among students
-    const rollTaken = await User.findOne({ role: "STUDENT", "student.rollNo": String(rollNo).trim().toUpperCase() });
+    const rollTaken = await User.findOne({ role: "STUDENT", "student.rollNo": academic.value.rollNo });
     if (rollTaken) return res.status(409).json({ success: false, message: "Roll number already registered" });
 
     const hashed = await bcrypt.hash(password, 10);
@@ -51,7 +43,7 @@ export const studentSignup = async (req, res, next) => {
       phone,
       role: "STUDENT",
       status: "PENDING",
-      student: { rollNo, department, cgpa: Number(cgpa), graduationYear: Number(graduationYear) },
+      student: academic.value,
     });
 
     res.status(201).json({

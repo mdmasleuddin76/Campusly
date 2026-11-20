@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronDown, LogOut, Menu, X } from "lucide-react";
+import { ChevronDown, LogOut, Menu, UserRound, X } from "lucide-react";
 import { toast } from "sonner";
 import Logo from "./Logo";
 import { buttonClass } from "./ui/Button";
@@ -146,6 +146,14 @@ export default function Header() {
                       <p className="text-xs text-forest-400">Signed in as</p>
                       <p className="truncate text-sm font-semibold text-forest-800">{user.email}</p>
                     </div>
+                    {user.role === "STUDENT" && (
+                      <Link
+                        to="/student/profile"
+                        className="flex w-full items-center gap-2 border-b border-cream-200 px-4 py-3 text-sm font-medium text-forest-700 transition hover:bg-cream-200"
+                      >
+                        <UserRound className="h-4 w-4" /> My profile
+                      </Link>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-sm font-medium text-hotpink-700 transition hover:bg-hotpink-50"
@@ -212,6 +220,16 @@ export default function Header() {
                       {link.label}
                     </button>
                   ))}
+              {user?.role === "STUDENT" && (
+                <NavLink
+                  to="/student/profile"
+                  className={({ isActive }) =>
+                    `block rounded-xl px-4 py-3 font-medium ${isActive ? "bg-forest-800 text-cream-100" : "text-forest-700 hover:bg-cream-200"}`
+                  }
+                >
+                  My profile
+                </NavLink>
+              )}
               <div className="flex gap-3 pt-3">
                 {user ? (
                   <button onClick={handleLogout} className={buttonClass("outline", "md", "w-full")}>

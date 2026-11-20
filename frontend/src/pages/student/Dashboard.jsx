@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { ArrowRight, BookOpen, Briefcase, CalendarDays, Clock, IdCard, Megaphone, Send, Star, Trophy } from "lucide-react";
+import { ArrowRight, BookOpen, Briefcase, CalendarDays, CircleAlert, Clock, IdCard, Megaphone, Pencil, Send, Star, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import api, { errorMessage } from "../../api/axios";
 import StatCard from "../../components/StatCard";
@@ -41,7 +41,9 @@ export default function StudentDashboard() {
   const firstName = user?.name?.split(" ")[0];
   const shortlisted = apps.filter((a) => a.status === "SHORTLISTED").length;
   const awaiting = apps.filter((a) => a.status === "APPLIED").length;
-  const freshJobs = useMemo(() => jobs.filter((j) => !j.hasApplied).slice(0, 3), [jobs]);
+  // Open drives they haven't applied to and can actually apply to
+  const freshJobs = useMemo(() => jobs.filter((j) => !j.hasApplied && j.eligible !== false).slice(0, 3), [jobs]);
+  const missingBacklogs = s.backlogs === undefined || s.backlogs === null;
 
   return (
     <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8">
@@ -65,7 +67,7 @@ export default function StudentDashboard() {
               {loading
                 ? "Loading your season..."
                 : jobs.length
-                  ? `${jobs.length} drive${jobs.length === 1 ? " is" : "s are"} open right now. ${freshJobs.length ? "Some you haven't applied to yet." : "You've applied to all of them!"}`
+                  ? `${jobs.length} drive${jobs.length === 1 ? " is" : "s are"} open right now. ${freshJobs.length ? "Some are waiting for your application." : "Nothing new to apply to right now."}`
                   : "No drives are open right now. We'll show them here as soon as they're approved."}
             </p>
             <Link
@@ -82,16 +84,24 @@ export default function StudentDashboard() {
               <span className="grid h-14 w-14 place-items-center rounded-2xl bg-cream-100 font-display text-xl font-bold text-forest-800">
                 {initials(user?.name)}
               </span>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">{user?.name}</p>
                 <p className="truncate text-xs text-cream-300/70">{user?.email}</p>
               </div>
+              <Link
+                to="/student/profile"
+                title="Edit profile"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest-800/70 text-cream-100 transition hover:bg-hotpink-500"
+              >
+                <Pencil className="h-4 w-4" />
+              </Link>
             </div>
-            <div className="mt-5 grid grid-cols-2 gap-2 text-sm">
+            <div className="mt-5 grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
               {[
                 { icon: IdCard, label: "Roll no.", value: s.rollNo },
                 { icon: BookOpen, label: "Dept.", value: s.department },
                 { icon: Star, label: "CGPA", value: s.cgpa },
+                { icon: CircleAlert, label: "Backlogs", value: s.backlogs },
                 { icon: CalendarDays, label: "Batch", value: s.graduationYear },
               ].map((x) => (
                 <div key={x.label} className="rounded-2xl bg-forest-800/70 px-3 py-2.5">
@@ -105,6 +115,21 @@ export default function StudentDashboard() {
           </div>
         </div>
       </motion.div>
+
+      {!loading && missingBacklogs && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
+          <Link
+            to="/student/profile"
+            className="group flex items-center gap-3 rounded-2xl border border-hotpink-200 bg-hotpink-50 px-5 py-4 text-sm text-hotpink-900 transition hover:shadow-soft"
+          >
+            <CircleAlert className="h-5 w-5 shrink-0 text-hotpink-600" />
+            <span className="flex-1">
+              <span className="font-semibold">Add your number of backlogs.</span> Drives with a backlog limit stay locked until you do.
+            </span>
+            <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+          </Link>
+        </motion.div>
+      )}
 
       {/* Stats */}
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -124,7 +149,7 @@ export default function StudentDashboard() {
                 {[0, 1].map((i) => <Skeleton key={i} className="h-56 rounded-3xl" />)}
               </div>
             ) : freshJobs.length === 0 ? (
-              <EmptyState icon={Briefcase} title={jobs.length ? "You're on top of it" : "No open drives yet"} text={jobs.length ? "You've applied to every open drive." : "New drives will show up here once the TPO approves them."} />
+              <EmptyState icon={Briefcase} title={jobs.length ? "You're on top of it" : "No open drives yet"} text={jobs.length ? "You've applied to every drive you're eligible for." : "New drives will show up here once the TPO approves them."} />
             ) : (
               <div className="grid gap-5 md:grid-cols-2">
                 {freshJobs.map((j, i) => (

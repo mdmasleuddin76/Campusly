@@ -15,7 +15,11 @@ const userSchema = new mongoose.Schema(
       department: { type: String, trim: true },
       cgpa: { type: Number, min: 0, max: 10 },
       graduationYear: { type: Number },
+      backlogs: { type: Number, min: 0 }, // active backlogs right now
     },
+
+    // Set when a student edits their profile (the TPO then re-approves the account)
+    profileUpdatedAt: { type: Date },
 
     // Only filled when role = RECRUITER
     recruiter: {

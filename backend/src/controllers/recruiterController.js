@@ -1,14 +1,25 @@
 import Job from "../models/Job.js";
 import Application from "../models/Application.js";
+import { optionalNumber } from "../utils/validation.js";
 
 const JOB_TYPES = ["FULL_TIME", "INTERNSHIP"];
 const APPLICATION_STATUSES = ["APPLIED", "SHORTLISTED", "NOT_SHORTLISTED"];
 
 // POST /api/recruiter/jobs
-// body: { role, package, location, jobType, description, jdLink, eligibility, deadline }
+// body: { role, package, location, jobType, description, jdLink, eligibility, deadline, minCgpa, maxBacklogs }
+// minCgpa / maxBacklogs are optional: leave them out (or empty) for "no limit"
 export const createJob = async (req, res, next) => {
   try {
     const { role, package: pkg, location, jobType, description, jdLink, eligibility, deadline } = req.body;
+
+    const minCgpa = optionalNumber(req.body.minCgpa);
+    if (minCgpa !== undefined && (isNaN(minCgpa) || minCgpa < 0 || minCgpa > 10)) {
+      return res.status(400).json({ success: false, message: "Minimum CGPA must be between 0 and 10" });
+    }
+    const maxBacklogs = optionalNumber(req.body.maxBacklogs);
+    if (maxBacklogs !== undefined && (!Number.isInteger(maxBacklogs) || maxBacklogs < 0)) {
+      return res.status(400).json({ success: false, message: "Maximum backlogs must be a whole number (0 or more)" });
+    }
 
     if (!role || !role.trim()) {
       return res.status(400).json({ success: false, message: "Job role is required" });
@@ -33,6 +44,8 @@ export const createJob = async (req, res, next) => {
       jdLink,
       eligibility,
       deadline,
+      minCgpa,
+      maxBacklogs,
       // status (PENDING) and isOpen (true) come from the schema defaults,
       // so a recruiter can't approve their own job by sending status in the body
     });

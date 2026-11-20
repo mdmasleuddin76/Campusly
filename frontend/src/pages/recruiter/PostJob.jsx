@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Briefcase,
   CalendarDays,
+  CircleAlert,
   ClipboardList,
   GraduationCap,
   Link2,
@@ -12,6 +13,7 @@ import {
   Rocket,
   ShieldCheck,
   Sparkles,
+  Star,
   Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -31,6 +33,8 @@ const EMPTY = {
   deadline: "",
   jdLink: "",
   eligibility: "",
+  minCgpa: "",
+  maxBacklogs: "",
   description: "",
 };
 
@@ -64,6 +68,10 @@ export default function PostJob() {
     if (!form.role.trim()) e.role = "What's the role called?";
     if (form.deadline && form.deadline < today()) e.deadline = "Pick today or a later date";
     if (form.jdLink && !isUrl(form.jdLink.trim())) e.jdLink = "Must start with http:// or https://";
+    const minCgpa = String(form.minCgpa).trim();
+    if (minCgpa !== "" && (isNaN(minCgpa) || Number(minCgpa) < 0 || Number(minCgpa) > 10)) e.minCgpa = "Between 0 and 10";
+    const maxBacklogs = String(form.maxBacklogs).trim();
+    if (maxBacklogs !== "" && !/^\d{1,2}$/.test(maxBacklogs)) e.maxBacklogs = "A whole number: 0, 1, 2...";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -80,6 +88,11 @@ export default function PostJob() {
       // send the deadline as the end of that day
       if (body.deadline) body.deadline = new Date(`${body.deadline}T23:59:59`).toISOString();
       else delete body.deadline;
+      // limits: numbers, or left out entirely for "no limit"
+      for (const key of ["minCgpa", "maxBacklogs"]) {
+        if (body[key] === "") delete body[key];
+        else body[key] = Number(body[key]);
+      }
       await api.post("/recruiter/jobs", body);
       toast.success("Drive submitted!", { description: "The TPO will review it before students can see it." });
       navigate("/recruiter/jobs");
@@ -146,7 +159,11 @@ export default function PostJob() {
           {/* Who and when */}
           <fieldset className="space-y-5 border-t border-dashed border-cream-400 pt-8">
             <Legend n="2" title="Who can apply, and by when" />
-            <Input id="eligibility" name="eligibility" label="Eligibility" icon={ShieldCheck} placeholder="CGPA 7+, CSE / IT / ECE, no active backlogs" value={form.eligibility} onChange={onChange} />
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Input id="minCgpa" name="minCgpa" type="number" step="0.01" min="0" max="10" label="Minimum CGPA" icon={Star} placeholder="e.g. 7.0" value={form.minCgpa} onChange={onChange} error={errors.minCgpa} hint="Empty = no CGPA limit" />
+              <Input id="maxBacklogs" name="maxBacklogs" type="number" step="1" min="0" label="Maximum backlogs" icon={CircleAlert} placeholder="e.g. 1" value={form.maxBacklogs} onChange={onChange} error={errors.maxBacklogs} hint="0 = no backlogs allowed. Empty = no limit" />
+            </div>
+            <Input id="eligibility" name="eligibility" label="Other requirements (optional)" icon={ShieldCheck} placeholder="CSE / IT / ECE only" value={form.eligibility} onChange={onChange} />
             <Input id="deadline" name="deadline" type="date" min={today()} label="Application deadline" icon={CalendarDays} value={form.deadline} onChange={onChange} error={errors.deadline} hint="Leave empty to keep it open until you close it." />
           </fieldset>
 
@@ -186,6 +203,9 @@ export default function PostJob() {
             <div className="mt-5">
               <JobMeta job={preview} dark />
             </div>
+            {(form.minCgpa !== "" || form.maxBacklogs !== "") && (
+              <p className="mt-4 text-xs text-cream-300/70">Only students who meet these limits can apply.</p>
+            )}
             {form.eligibility && (
               <p className="mt-5 text-sm">
                 <span className="font-semibold text-hotpink-300">Eligibility: </span>

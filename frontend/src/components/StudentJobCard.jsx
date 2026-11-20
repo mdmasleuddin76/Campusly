@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { ArrowUpRight, CircleCheck, Hourglass } from "lucide-react";
+import { ArrowUpRight, Ban, CircleCheck, Hourglass } from "lucide-react";
 import JobMeta from "./JobMeta";
 import { daysLeft, deadlineText, initials, timeAgo } from "../utils/format";
 
@@ -22,10 +22,19 @@ export default function StudentJobCard({ job, index = 0, compact = false }) {
         to={`/student/jobs/${job._id}`}
         className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-cream-300 bg-cream-50 p-6 transition-shadow duration-300 hover:shadow-lift"
       >
-        {job.hasApplied && (
+        {job.hasApplied ? (
           <span className="absolute right-0 top-0 flex items-center gap-1 rounded-bl-2xl bg-forest-800 px-3 py-1.5 text-[11px] font-semibold text-cream-100">
             <CircleCheck className="h-3.5 w-3.5 text-hotpink-400" /> Applied
           </span>
+        ) : (
+          job.eligible === false && (
+            <span
+              title={job.ineligibleReasons?.join(" · ")}
+              className="absolute right-0 top-0 flex items-center gap-1 rounded-bl-2xl bg-hotpink-100 px-3 py-1.5 text-[11px] font-semibold text-hotpink-800"
+            >
+              <Ban className="h-3.5 w-3.5" /> Not eligible
+            </span>
+          )
         )}
 
         <div className="flex items-start gap-4">

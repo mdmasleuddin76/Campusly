@@ -41,10 +41,10 @@ const REMARK_IDEAS = ["Interview scheduled", "Cleared round 1", "Cleared round 2
 
 // Builds and downloads a CSV of the applicants
 const downloadCsv = (job, apps) => {
-  const head = ["Name", "Email", "Phone", "Roll no", "Department", "CGPA", "Graduation year", "Resume link", "Status", "Remarks", "Applied on"];
+  const head = ["Name", "Email", "Phone", "Roll no", "Department", "CGPA", "Backlogs", "Graduation year", "Resume link", "Status", "Remarks", "Applied on"];
   const rows = apps.map((a) => {
     const s = a.studentId || {};
-    return [s.name, s.email, s.phone, s.student?.rollNo, s.student?.department, s.student?.cgpa, s.student?.graduationYear, a.resumeLink, a.status, a.remarks, formatDate(a.createdAt)];
+    return [s.name, s.email, s.phone, s.student?.rollNo, s.student?.department, s.student?.cgpa, s.student?.backlogs, s.student?.graduationYear, a.resumeLink, a.status, a.remarks, formatDate(a.createdAt)];
   });
   const csv = [head, ...rows].map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
@@ -334,6 +334,10 @@ function ApplicantRow({ app, index, busy, onOpen, onUpdate }) {
         <div className="rounded-2xl bg-cream-100 px-3 py-1.5 text-center">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-forest-400">CGPA</p>
           <p className="font-display text-lg font-bold leading-none">{s.student?.cgpa ?? "–"}</p>
+        </div>
+        <div className="rounded-2xl bg-cream-100 px-3 py-1.5 text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-forest-400">Backlogs</p>
+          <p className="font-display text-lg font-bold leading-none">{s.student?.backlogs ?? "–"}</p>
         </div>
         <a
           href={app.resumeLink}

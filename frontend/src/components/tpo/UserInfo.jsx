@@ -1,19 +1,22 @@
-import { BookOpen, Building2, CalendarDays, Globe, IdCard, Mail, Phone, Star, UserRound } from "lucide-react";
+import { BookOpen, Building2, CalendarDays, CircleAlert, Globe, IdCard, Mail, Phone, Star, UserRound } from "lucide-react";
+
+const isEmpty = (v) => v === undefined || v === null || v === "";
 
 function Chip({ icon: Icon, label, value, href }) {
+  // 0 is a real value (e.g. 0 backlogs), so only empty values show a dash
   const content = (
     <>
       <Icon className="h-4 w-4 shrink-0 text-forest-400" />
       <span className="min-w-0">
         <span className="block text-[10px] font-semibold uppercase tracking-wider text-forest-400">{label}</span>
         <span className={`block truncate text-sm font-semibold ${href ? "text-hotpink-600 underline-offset-2 group-hover:underline" : "text-forest-800"}`}>
-          {value || "—"}
+          {isEmpty(value) ? "—" : value}
         </span>
       </span>
     </>
   );
   const cls = "group flex items-center gap-2.5 rounded-2xl bg-cream-100 px-3 py-2.5";
-  return href && value ? (
+  return href && !isEmpty(value) ? (
     <a href={href} target="_blank" rel="noreferrer" className={`${cls} transition hover:bg-hotpink-50`}>
       {content}
     </a>
@@ -31,7 +34,10 @@ export default function UserInfo({ user, full = false }) {
         <Chip icon={IdCard} label="Roll no." value={s.rollNo} />
         <Chip icon={BookOpen} label="Department" value={s.department} />
         <Chip icon={Star} label="CGPA" value={s.cgpa?.toFixed ? s.cgpa.toFixed(2) : s.cgpa} />
-        <Chip icon={CalendarDays} label="Graduating" value={s.graduationYear} />
+        <Chip icon={CircleAlert} label="Backlogs" value={s.backlogs ?? "Not added"} />
+        <div className="col-span-2">
+          <Chip icon={CalendarDays} label="Graduating" value={s.graduationYear} />
+        </div>
         {full && <Chip icon={Mail} label="Email" value={user.email} href={`mailto:${user.email}`} />}
         {full && <Chip icon={Phone} label="Phone" value={user.phone} />}
       </div>

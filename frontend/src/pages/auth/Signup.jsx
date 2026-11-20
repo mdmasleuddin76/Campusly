@@ -1,32 +1,15 @@
 import { useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
-import {
-  ArrowRight,
-  BookOpen,
-  Briefcase,
-  Building2,
-  CalendarDays,
-  CircleCheck,
-  Globe,
-  GraduationCap,
-  Hash,
-  IdCard,
-  Lock,
-  Mail,
-  Phone,
-  Star,
-  User,
-} from "lucide-react";
+import { ArrowRight, Briefcase, Building2, CircleCheck, Globe, GraduationCap, Hash, Lock, Mail, Phone, User } from "lucide-react";
 import { toast } from "sonner";
 import AuthShell from "../../components/AuthShell";
 import Button, { buttonClass } from "../../components/ui/Button";
-import { Input, PasswordInput, Select, Textarea } from "../../components/ui/Field";
+import { Input, PasswordInput, Textarea } from "../../components/ui/Field";
+import StudentAcademicFields from "../../components/StudentAcademicFields";
 import { useAuth } from "../../context/AuthContext";
 import api, { errorMessage } from "../../api/axios";
-import { DEPARTMENTS } from "../../config/site";
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { EMAIL_REGEX, isUrl, validatePhone, validateStudentAcademic } from "../../utils/validators";
 
 const ROLES = [
   { key: "student", label: "Student", icon: GraduationCap },
@@ -43,20 +26,12 @@ const EMPTY = {
   department: "",
   cgpa: "",
   graduationYear: "",
+  backlogs: "",
   // recruiter
   companyName: "",
   companyWebsite: "",
   designation: "",
   companyDescription: "",
-};
-
-const isUrl = (v) => {
-  try {
-    const u = new URL(v);
-    return u.protocol === "http:" || u.protocol === "https:";
-  } catch {
-    return false;
-  }
 };
 
 // Same rules as the backend, so most mistakes are caught before sending
@@ -67,15 +42,11 @@ const validate = (role, f) => {
   else if (!EMAIL_REGEX.test(f.email)) e.email = "That doesn't look like an email";
   if (!f.password) e.password = "Choose a password";
   else if (f.password.length < 6) e.password = "At least 6 characters";
-  if (f.phone && !/^\d{10}$/.test(f.phone)) e.phone = "10 digits, no spaces";
+  const phoneError = validatePhone(f.phone);
+  if (phoneError) e.phone = phoneError;
 
   if (role === "student") {
-    if (!f.rollNo.trim()) e.rollNo = "Enter your roll number";
-    if (!f.department) e.department = "Pick your department";
-    if (f.cgpa === "") e.cgpa = "Enter your CGPA";
-    else if (isNaN(f.cgpa) || Number(f.cgpa) < 0 || Number(f.cgpa) > 10) e.cgpa = "Between 0 and 10";
-    if (!f.graduationYear) e.graduationYear = "Enter your graduation year";
-    else if (!/^20\d{2}$/.test(f.graduationYear)) e.graduationYear = "e.g. 2026";
+    Object.assign(e, validateStudentAcademic(f));
   } else {
     if (!f.companyName.trim()) e.companyName = "Enter your company name";
     if (!f.designation.trim()) e.designation = "Enter your designation";
@@ -123,6 +94,7 @@ export default function Signup() {
             department: form.department,
             cgpa: Number(form.cgpa),
             graduationYear: Number(form.graduationYear),
+            backlogs: Number(form.backlogs),
           }
         : {
             ...common,
@@ -231,12 +203,7 @@ export default function Signup() {
             </p>
 
             {role === "student" ? (
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Input id="rollNo" name="rollNo" label="Roll number" icon={IdCard} placeholder="21CS045" value={form.rollNo} onChange={onChange} error={errors.rollNo} />
-                <Select id="department" name="department" label="Department" icon={BookOpen} options={DEPARTMENTS} placeholder="Choose" value={form.department} onChange={onChange} error={errors.department} />
-                <Input id="cgpa" name="cgpa" type="number" step="0.01" min="0" max="10" label="CGPA" icon={Star} placeholder="8.4" value={form.cgpa} onChange={onChange} error={errors.cgpa} />
-                <Input id="graduationYear" name="graduationYear" type="number" label="Graduation year" icon={CalendarDays} placeholder="2026" value={form.graduationYear} onChange={onChange} error={errors.graduationYear} />
-              </div>
+              <StudentAcademicFields form={form} onChange={onChange} errors={errors} />
             ) : (
               <div className="grid gap-5 sm:grid-cols-2">
                 <Input id="companyName" name="companyName" label="Company name" icon={Building2} placeholder="Acme Technologies" value={form.companyName} onChange={onChange} error={errors.companyName} />

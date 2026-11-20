@@ -30,8 +30,11 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // The server already ended the session (e.g. after a profile update): just forget the user here
+  const endSession = () => setUser(null);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, loading, login, logout, endSession }}>{children}</AuthContext.Provider>
   );
 }
 

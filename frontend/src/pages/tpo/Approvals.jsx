@@ -140,9 +140,18 @@ export default function Approvals() {
                       <h3 className="truncate font-sans text-lg font-semibold">{u.name}</h3>
                       <p className="truncate text-sm text-forest-500">{u.email}</p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-cream-200 px-2.5 py-1 text-[11px] font-medium text-forest-500">
-                      {timeAgo(u.createdAt)}
-                    </span>
+                    {u.profileUpdatedAt ? (
+                      <span
+                        title="This student edited their profile and needs re-approval"
+                        className="shrink-0 rounded-full bg-hotpink-100 px-2.5 py-1 text-[11px] font-semibold text-hotpink-800"
+                      >
+                        Profile updated {timeAgo(u.profileUpdatedAt)}
+                      </span>
+                    ) : (
+                      <span className="shrink-0 rounded-full bg-cream-200 px-2.5 py-1 text-[11px] font-medium text-forest-500">
+                        {timeAgo(u.createdAt)}
+                      </span>
+                    )}
                   </div>
 
                   <div className="mt-5 flex-1">

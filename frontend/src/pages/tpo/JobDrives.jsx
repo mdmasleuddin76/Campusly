@@ -5,11 +5,13 @@ import {
   Briefcase,
   CalendarDays,
   Check,
+  CircleAlert,
   ExternalLink,
   FileSearch,
   ListChecks,
   MapPin,
   RotateCcw,
+  Star,
   Timer,
   Wallet,
   X,
@@ -26,6 +28,7 @@ import StatusBadge from "../../components/ui/StatusBadge";
 import EmptyState from "../../components/ui/EmptyState";
 import { CardSkeletons } from "../../components/ui/Skeleton";
 import { formatDate, initials, timeAgo } from "../../utils/format";
+import { backlogText } from "../../components/JobMeta";
 
 const TYPE_LABEL = { FULL_TIME: "Full-time", INTERNSHIP: "Internship" };
 
@@ -183,6 +186,8 @@ function JobCard({ job, index, busy, onDecide }) {
           {job.package && <Detail icon={Wallet}>{job.package}</Detail>}
           {job.location && <Detail icon={MapPin}>{job.location}</Detail>}
           <Detail icon={Briefcase}>{TYPE_LABEL[job.jobType] || job.jobType}</Detail>
+          {job.minCgpa != null && <Detail icon={Star}>CGPA {job.minCgpa}+</Detail>}
+          {job.maxBacklogs != null && <Detail icon={CircleAlert}>{backlogText(job.maxBacklogs)}</Detail>}
           {job.deadline && <Detail icon={CalendarDays}>Apply by {formatDate(job.deadline)}</Detail>}
         </div>
 

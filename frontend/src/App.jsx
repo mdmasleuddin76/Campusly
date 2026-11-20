@@ -17,6 +17,7 @@ import Jobs from "./pages/student/Jobs";
 import JobDetails from "./pages/student/JobDetails";
 import MyApplications from "./pages/student/MyApplications";
 import StudentAnnouncements from "./pages/student/StudentAnnouncements";
+import Profile from "./pages/student/Profile";
 import { useAuth } from "./context/AuthContext";
 
 function FullPageLoader() {
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="/student/jobs/:id" element={<JobDetails />} />
           <Route path="/student/applications" element={<MyApplications />} />
           <Route path="/student/announcements" element={<StudentAnnouncements />} />
+          <Route path="/student/profile" element={<Profile />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
